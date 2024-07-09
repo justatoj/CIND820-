@@ -1,0 +1,238 @@
+﻿In [ ]:
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+In [ ]:
+# Import dataframe as csv file.
+cust_sat_df = pd.read_csv('Airline_customer_satisfaction.csv')
+print(cust_sat_df.head())
+Step 1: Data Collection and Preprocessing
+Data cleaning and preprocessing are essential fundamental steps to ensure that the dataset that will be used is appropriate for analysis. By handling missing values, and converting categorical data into a numerical format prepares the data for the machine learning algorithms, making sure that the models can effectively learn without being skewed by inconsistencies or irrelevant variations in data.
+1.1: Data Cleaning
+    Missing values can lead to inaccurate predictions by building a biased machine learning model. Using the median to represent the missing values is effective because it is less sensitive to outliers compared to the mean. This means that the median is not skewed by exceptionally high or low values. This ensures the dataset remainds robust. Since this is a large dataset, imputation is more beneficial than removing null rows as it will retain more information which will allow for a more comprehensive study.
+    Additionally, since the target variable for this study is "satisfaction", this category has to be converted into binary to be used in the Apriori Algorithm, Model Evaluation and Cross-Validation. To do this, the function applymap will be used. "Lambda" will refer to keeping all values where x = "Satisfied" as 1, else all other values will be set as 0.
+    This step was done in all the studies, such as Noviantoro and Huang's study, where data preparation involved replacing missing values with the medians of the feature and removing columns that are not necessary for the research. 
+In [ ]:
+# Check for any missing values by finding the sum total of all null values in each variable.
+print(cust_sat_df.isnull().sum())
+In [ ]:
+# Replace the missing values with the median for each column.
+for column in cust_sat_df.columns:
+    if data[column].dtype in ['int64', 'float64']:      # Have to replace all numerical values only.
+        median_value = data[column].median()
+        data[column].fillna(median_value, inplace=True)
+In [ ]:
+# Double check that there are no missing values in the data.
+print(cust_sat_df.isnull().sum())
+In [ ]:
+# Convert the target variable to binary. 
+cust_sat_df['satisfaction'] = cust_sat_df['satisfaction'].apply(lambda x: 1 if x == 'satisfied' else 0)
+1.2:
+    After handling missing values and checking for duplicated data, it is necessary to transform categorical values into numerical values using the "One-hot encoding" method. This method will convert the categorical columns "satisfaction", "Customer Type", "Type of Travel", and "Class" into their numerical counterparts by branching each variable into as many 0/1 variables as there are different values. The "drop_first" argument when One-hot coding variables indicates that the first category must be dropped. 
+    Separating the target variable, y, from the features, X, is another necessary step when preparing for model training as it will be needed in supervised learning tasks.
+    This method was utilized in Noviantoro and Huang's study to ensure model compatibility because machine learning models require a numerical input. 
+In [ ]:
+# Step 2: Data Transformation
+# Separate the features and the target for model evalutation.
+X = cust_sat_df.drop(columns = ['satisfaction'])
+y = cust_sat_df['satisfaction']
+
+# Turning categorical values into numerical values by One-hot encoding Categorical Variables.
+# Dropping the first level avoids multicollinearity. 
+X_encoded = pd.get_dummies(X, drop_first = True)
+
+# Show first five columns of the encoded dataframe.
+print(X_encoded.head())
+1.3:
+    Next, the dataframe will be standardized. This study will utilize the use of standardization (also known as Z-score normalization), as opposed to normalization as stanadardization is because
+    1. Standardization assumes the data is centered around zero and has unit variance which supports the requirements of machine learning algorithms like Principal Component Analysis (PCA).
+    2. Outliers have less of an effect on standardization than normalization since standardization rescales values strictly between a specific range. This means that standardization is able to mitigate the effects of extreme values more effectively than normalization because it is dependent on the mean and standard deviation.
+    The Z-score is calculated by using the fomula Z = [ X (original data) - μ (mean of data) ] / σ (standard deviation). This is the formula the StandardScaler() function.
+    This method was used in Xuchu Jiang, Ying Zhang, Ying Li, and Biao Zhang's study te ensure the dataframe is consistent which will produce reliable conclusions about the determinants of customer airline satisfaction.
+In [ ]:
+# Initial data summary.
+print(cust_sat_df_encoded.info())
+In [ ]:
+# Step 3: Standardization.
+# Import the StandardScalar library.
+from sklearn.preprocessing import StandardScaler
+In [ ]:
+#Standardize the data using the StandardScalar() function.
+scalar = StandardScaler()
+X_scaled = scalar.fit_transform(X_encoded)
+Step 2: Exploratory Data Analysis (EDA) and Correlation Matrix
+2.1: Descriptive Statistics
+The purpose of an EDA is to provide a deep understanding of the dataset by highlighting underlying trends, abnormalities, and patterns. This stage is crucial for well-informed decision making in feature selection and model construction. 
+To perform the EDA, this study will utilize "SweetViz"; a python library which generates detailed reports about the dataframe being used. 
+In [ ]:
+# Download and install the SweetViz Python library.
+! pip install sweetviz
+
+# Import the Sweetviz Library.
+import sweetviz as sv
+In [ ]:
+# Analyze the dataset using SweetViz. Assign the analysis to a variable.
+report = sv.analyze(cust_sat_df_std)
+In [ ]:
+# Save the report to an HTML file and save the findings as another file. Open the file in a new browser for convenience.
+report.show_html('Customer_Airline_Satisfaction_EDA.html', open_browser = True)
+In [ ]:
+# Import the IPython library to show the EDA report.
+import IPython
+
+# Display the EDA report within the study.
+IPython.display.HTML('Customer_Airline_Satisfaction_EDA.html')
+Analysis:
+From the Correlation Matrix generated by SweetViz's EDA report, some of the results found are:
+    1. Class_Business has a strong positive correlation with Type of Travel_Business travel. This shows that customers travelling for business often travel in business class.
+    2. Flight_Distance has a strong negative correlation with Age. This shows that the older the customer, the less likely they are to fly long distances.
+    3. Food_And_Drink has a very strong positive correlation with Seat_Comfort. This means that the better the quality of refreshments the customers receive, the more comfortable customers find the seats.
+Additionally, the EDA report provided histograms, bar graphs, a correlation matrix, and a summary of the data amongst other information which will help guide this study while performing an analysis on the dataset. 
+2.2:
+Thus far, this study has created an EDA report to gain a comprehensive understanding about the dataset. Additionally, data cleaning and preprocessing has been completed. It is time to verify if all data has been cleaned using the "cust_sat_df_std" dataframe.
+In [ ]:
+# Print the head (first five rows) of the standardized dataframe.
+print(cust_sat_df_std.head())
+In [ ]:
+# Print the summary of the dataframe.
+print(cust_sat_df_std.info())
+In [ ]:
+# Find the summary statistics.
+print(cust_sat_df_std.describe())
+In [ ]:
+# Verify there are no missing values.
+print(cust_sat_df_std.isnull().sum())
+In [ ]:
+# Check for any duplicate rows.
+print(cust_sat_df_std.duplicated().sum())
+In [ ]:
+# Print the data type of each variable.
+print(cust_sat_df_std.dtypes)
+Step 3: Feature Selection
+Feature Selection is the process of eliminating all redundant and irrelevant variables while isolating the most consistent and critical variables to use in model construction to improve the algorithm's performance and prediction power. This is done by analyzing the importance of each variable through scores, and excluding the irrelevant ones.
+3.1: Recursive Feature Elimination (RFE) with Random Forest (RF)
+    Recursively eliminating the least significant features using RFE with RF returns the most significant features. The strength and capacity of RF has the ability to handle a large number of features without overfitting. Xuchu Jiang, Ying Zhang, Ying Li, and Biao Zhang's study employ this technique to reduce dimensionality and enhance model performance. They, along with a number of other studies, found RFE with RF to be the achieved the hightest level accuracy which is what will be replicated in this study. 
+    For the model, the random state parameter is set as 42 since it is the most commonly used parameter. This parameter limit works for this report as using "random state" ensures that the methodology followed in this study is reproducible and consistent since, in machine learning, operations such as data splitting depend on random number generation. Setting a "random state" makes sure that even across different runs, operations will produce the same result.
+    It has been stressed by researchers such as Xuchu Jiang, Ying Zhang, Ying Li, and Biao Zhang how significant repeatable outcomes are for machine learning studies.
+    First, for classification tasks, the target variable (y) must be categorical (discrete). As seen in the previous code for datatypes, "satisfaction_satisfied" is a float which means it is a continuous variable. To make it discrete, it must be converted into an integer to make it a binary indicator.
+    In Tri Noviantoro and Jen-Peng Huang's study, they found the top five, however this study will find the top ten selected features for more information, and clarity.
+    Selecting only the highest ranking categories ensures that the only the more relevant features are utilized in the analysis, which improves the efficiency of the model.
+In [ ]:
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFE
+In [ ]:
+# Feature Selection using RFE with Logistic Regression
+model = LogisticRegression(max_iter=1000)
+rfe = RFE(model, n_features_to_select=10)
+rfe.fit(X_scaled, y)
+In [ ]:
+# Select highest features based on the RFE ranking.
+selected_features = X_encoded.columns[rfe.support_]
+X_selected = X_encoded[selected_features]
+Step 4: Model Building and Evaluation
+4.1: Train-Test Split
+    Dividing the dataset into training and testing sets allows for the assessment of the model's performance on previously untested data and makes sure that it performs well in general. The most commonly used split is an 80-20 split which is employed to balance the amount of data needed for testing and training.
+    Many researchers utilized this 80-20 split for their own study including Xuchu Jiang, Ying Zhang, Ying Li, and Biao Zhang, and this split was also found in Tri Noviantoro and Jen-Peng Huang's study.
+    For the train-test split, the random_state will continue to be set to 42 for consistency. Additionally, setting the test_size to 0.2 refers to the fact that this study is utilizing an 80-20 test, thus the 0.2 is test size. The "axis = 1" parameter refers to the column 'satisfaction_satisfied' being removed as it is the training variable (y) so as to not leak into the data, it must be dropped.
+In [ ]:
+from sklearn.model_selection import train_test_split
+In [ ]:
+# Train-test split 80/20. 0.2 test size and a random state of 42 for reproducibility.
+X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size = 0.2, random_state = 42)
+4.2: Train Models
+    By training multiple models simultaneously allows for the comparison and selection of the top performing model which will ensure reliability of the results. This study will focus on Decision Trees, Random Forest, and Logistic Regression as they are all classification models and have complimentary strengths. Additionally, these three models were found to be the highest performing by multiple studies including Xuchu Jiang, Ying Zhang, Ying Li, and Biao Zhang's, and Tri Noviantoro and Jen-Peng Huang's study. This approach ensures a thorough evaluation of the different model types.
+    The max depth of the decision tree is set to 5 to avoid overfitting and preventing the tree from becoming too complex while simulaneously capturing only the important data. A tree greater than a depth of 5 will becoming too complex and inefficient as it will capture too fine of details instead of focusing on the important aspects. A min sample split of 10 avoids splits on small sample sizes.
+    Similarly, Random Forest also utilized the same parameters as Decision Trees. However, the n_estimators is set to 100 as this provides enough trees to ensure stability and strong predictions without extra computations.
+    For the Logistic Regression model, this study will set the max iterations = 1000 as it is the most commonly used number of iterations, and is the max number of iterations used by other the researchers as mentioned previously. This parameter ensures that the model has a sufficient number of iterations to perform well since this is a complex dataset.
+In [ ]:
+# Import the three classification models.
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+In [ ]:
+# Use random_state as 42 to maintain consistency and reproducibility within the study.
+models = {
+    'Decision Tree': DecisionTreeClassifier(max_depth=5, min_samples_split=10),
+    'Random Forest': RandomForestClassifier(n_estimators=100, max_depth=5, min_samples_split=10),
+    'Logistic Regression': LogisticRegression(max_iter=1000)
+}
+Step 5: Association Analysis (Apriori Algorithm)
+    Association Analysis is utilized to find relationships between the different variables within the dataset. This method was employed by Sachin Kumar and Mikhail Zymbler in their study to discover underlying patterns and provide deeper insights into factors affecting customer satisfaction.
+    First, the data must be converted into binary as the Apriori Algorithm takes only 0 and 1 values. To do this, the function applymap will be used. "Lambda" will refer to keeping any non-zero and True values as 1, else all other values will be set as 0.
+    Then, the Apriori Algorithm will be carried out using the "apriori" and "assosication_rules" function. The apriori data will be used as it fits the requirements necessary to perform the algorithm. Min_support is set to 0.3 to focus on the most frequent itemsets. 
+    In the Association rules function, the metric = "lift" functions refers to using the "lift" metric to generate the rules. It measures the likeliness of the consequent of the rule given the antecedent, compared to if they were independent. The min_threshold is set to 1 as it is the lift metric. This means that the algorithm will only consider rules with a lift of 1. This ensures that the likelihood of the antecedent and consequent combined is at least equal to their likelihood separately. This is crucial to guarantee the identification of meaningful relationships within itemsets. 
+In [ ]:
+# Install the mlxtend library to perform Apriori Algorithm.
+! pip install mlxtend  
+In [ ]:
+# Import the Apriori and Association Rules library.
+from mlxtend.frequent_patterns import apriori, association_rules
+In [ ]:
+x_selected_with_sat = X_selected.copy()
+x_selected_with_sat['satisfaction_satisfied'] = cust_sat_df_std['satisfaction_satisfied']
+
+# Now X_selected contains the satisfaction_satisfied column
+print(x_selected_with_sat.tail())
+# Convert data to a format suitable for association analysis. apriori_data = x_selected_with_sat.applymap(lambda x: 1 if x else 0) # Apply Apriori algorithm. # Use_colnames refers to the output retaining the column names the same as found in the apriori_data dataset. frequent_itemsets = apriori(apriori_data, min_support = 0.3, use_colnames = True) # Generate association rules rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1) # Filter rules related to customer satisfaction satisfaction_rules = rules[rules['consequents'] == {'satisfaction_satisfied'}] # Display relevant rules print("Association Rules Related to Customer Satisfaction:\n", satisfaction_rules)
+import pandas as pd from mlxtend.frequent_patterns import apriori, association_rules # Convert data to a binary format suitable for association analysis data_for_apriori = X_selected.applymap(lambda x: 1 if x else 0) # Apply Apriori algorithm to find frequent itemsets frequent_itemsets = apriori(data_for_apriori, min_support=0.1, use_colnames=True) # Generate association rules from the frequent itemsets rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1) # Display the first few association rules print("Association Rules:\n", rules.head())
+Step 6: Model Evaluation
+    Metrics such as precision, accuracy, recall. F-1 score, and ROC-AUC are used in model evaluation to provide a thorough understanding of the models' performance. This ensures that the chosen model is both accurate and dependable. This was emphasized in both Tri Noviantoro and Jen-Peng Huang's study, as well as in Chris Bacani's.
+    For this, a for loop is used to iterate over each item in the dictionary, "models". Then, the "fit" method is used to train the model using the training data; (X_train, y_train). This helps the model learn the relationships in the data which will help it make predictions. After, the "pred" method is used to make predictions on the X_test test data and will output "y_pred".
+    The loop will then calculate the accuracy (proportion of correct predictions out of total instances), precision (true positives amongst all positives), recall (true positives amongst all real positives), F-1 score (the mean of precision and recall), and ROC-AUC if necessary (how well the model is able to distinguish between negatives and positives). 
+    The zero-division = 1 parameter is required for cases where there are no positive predictions, no true positives, and cases where both recall and precision are zero. 
+In [ ]:
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+
+# Model Evaluation
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    print(f"{name} Accuracy: {accuracy_score(y_test, y_pred)}")
+    print(f"{name} Precision: {precision_score(y_test, y_pred, zero_division=1)}")
+    print(f"{name} Recall: {recall_score(y_test, y_pred, zero_division=1)}")
+    print(f"{name} F1 Score: {f1_score(y_test, y_pred, zero_division=1)}")
+    if hasattr(model, "predict_proba"):
+        y_pred_proba = model.predict_proba(X_test)[:, 1] if model.predict_proba(X_test).shape[1] > 1 else model.predict_proba(X_test)
+        print(f"{name} ROC AUC: {roc_auc_score(y_test, y_pred_proba)}")
+# predict.proba returns each class' predicted probabilites.
+# [:, 1] chooses the probabilities of the positive class.
+Overall, we see that Random Forest is the best model given the metrics as it has the highest accuracy (0.897), highest recall (0.922), highest F-1 score (0.908) and highest ROC-AUC (0.956). This reflects on the study done by Xuchu Jiang, Ying Zhang, Ying Li, and Biao Zhang who had similar conclusions.
+Step 7: Cross-Validation Using K-Means
+    Cross-validation makes ensuring that the model performs consistently and reliably on various subsets of data. In this study, we will be using 10-Fold-Cross-Validation to ensure that the model evaluation is robust and dependable. The 10-Fold-Cross-Validation method effectively balances variance and bias. It doesn't require an excessive amount of computing power and offers a trustworthy predication of model performance.
+    Using the 10-Fold-Cross-Validation technique is reference to Tri Noviantoro and Jen-Peng Huang's study which also used 10-Fold as opposed to 5-Fold as their data was a similarly large size to the one used in this study. 
+    We continue using random state as 42 to allow for reproducibility. Shuffle is True to ensure a random distrubution of classes within the splits.
+    For this, we create a loop using the models dictionary. cv=kf refers to the cross-validation strategy. In this model, it is the 10-Fold-Cross-Validation technique. The scoring = " " refers to the metric the code will use for evaluation at that time.
+In [ ]:
+from sklearn.model_selection import cross_val_score, KFold
+
+# 10-Fold-Cross-Validation.
+kf = KFold(n_splits=10, shuffle=True, random_state=42)
+
+# Cross-Validation for each model.
+for name, model in models.items():
+    print(f"Evaluating {name}...")
+    accuracy = cross_val_score(model, X_selected, y, cv=kf, scoring='accuracy')
+    precision = cross_val_score(model, X_selected, y, cv=kf, scoring='precision')
+    recall = cross_val_score(model, X_selected, y, cv=kf, scoring='recall')
+    f1 = cross_val_score(model, X_selected, y, cv=kf, scoring='f1')
+    roc_auc = cross_val_score(model, X_selected, y, cv=kf, scoring='roc_auc')
+
+    print(f"{name} Cross-Validation Results:")
+    print(f"Accuracy: {np.mean(accuracy):.4f} ± {np.std(accuracy):.4f}")
+    print(f"Precision: {np.mean(precision):.4f} ± {np.std(precision):.4f}")
+    print(f"Recall: {np.mean(recall):.4f} ± {np.std(recall):.4f}")
+    print(f"F1 Score: {np.mean(f1):.4f} ± {np.std(f1):.4f}")
+    print(f"ROC AUC: {np.mean(roc_auc):.4f} ± {np.std(roc_auc):.4f}")
+    print("\n")
+In conclusion, the top three most important factors influencing customer satisfaction in the airline business have been identified by the analysis conducted using the Apriori Algorithm. These factors are:;
+1. Online Boarding;
+2. Inflight Wifi Services, and;
+3. Baggage Handling
+Airline companies should give priority to improving these three crucial areas in order to increase customer satisfaction. Airlines can significantly increase customer satisfaction and increase passenger loyalty by focusing on optimizing baggage handling operations, guaranteeing strong inflight WiFi access, and expediting online boarding procedures.
+Links:
+GitHub Link: https://github.com/justatoj/CIND820-.git
+Dataset Link: https://www.kaggle.com/datasets/raminhuseyn/airline-customer-satisfaction/data
+In [ ]:
+ 
